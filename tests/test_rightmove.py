@@ -37,9 +37,9 @@ rentParams = {
 rm.search_properties(propType='rent', params=rentParams)
 
 rm.estimate_postcodes(p.latlongDict)
-rm.to_json('results.json')
+rm.to_json('rm_results.json')
 
-rm.load_json('results.json')
+rm.load_json('rm_results.json')
 
 # filter any properties with latlong outside general London area
 londonDf = rm.resultsDf[(rm.resultsDf.latitude > 51) & (rm.resultsDf.latitude < 52) & (rm.resultsDf.longitude > -0.75) & (rm.resultsDf.longitude < 0.75)]
