@@ -17,7 +17,7 @@ class JourneyPlanner(object):
     def load_postcodes(self, postcodeDict):
         self.postcodeDict = postcodeDict
 
-    def request_journeys(self, endLocation, year=2020, month=11, day=1, hour=8, limit=None):
+    def request_journeys(self, endLocation, year, month, day, hour, limit=None):
         departDatetime = datetime(year=year, month=month, day=day, hour=hour, minute=00)
         if datetime.now() > departDatetime:
             raise Exception('Requested "departDatetime" is in the past')
@@ -43,6 +43,8 @@ class JourneyPlanner(object):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(run(endLocation, params))
+
+        return print(f'JourneyPlanner: Collected {len(self.results)} results.')
 
     async def _fetch_journey(self, startPostcode, endLocation, params):
         url = f"{self.url}Journey/JourneyResults/{startPostcode}/to/{endLocation}"
@@ -118,6 +120,33 @@ class JourneyPlanner(object):
         'legs': [{'mode': leg['mode']['name'], 'duration': leg['duration']} for leg in journey['legs']]
         } 
         for postcode, result in self.results.items() for journey in result['journeys']]
+
+def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year, month, day, hour):
+    with open(csvPath, 'r') as f:
+        rows = f.readlines()
+    headers = rows.pop(0).rstrip().split(',')
+    colIdx = headers.index('postcode')
+    collectedPostcodes = {row.split(',')[colIdx] for row in rows}
+
+    newPostcodeDict = {postcode: latlong for postcode, latlong in postcodeDict.items() if postcode not in collectedPostcodes}
+    print('New postcodes:', len(newPostcodeDict))
+
+    jp = JourneyPlanner(app_id=tflKeysDict['app_id'], app_key=tflKeysDict['app_key'], rateLimit=0.14)
+    jp.load_postcodes(newPostcodeDict)
+    jp.request_journeys(endLocation=destination, year=year, month=month, day=day, hour=hour, limit=None)
+    
+    if not jp.results:
+        return print('No new (working) postcodes since last update.')
+
+    oldDf = pd.read_csv(csvPath, index_col='postcode')
+    # try:
+    newDf = jp.get_df(resultsType='postcodes')
+    # except KeyError:
+    #     return print('No new (working) postcodes since last update.')
+    combinedDf = oldDf.append(newDf)
+    # print(combinedDf)
+    combinedDf.to_csv(csvPath)
+    return print('Postcodes added:', len(newDf))
 
 if __name__ == "__main__":
     import json
