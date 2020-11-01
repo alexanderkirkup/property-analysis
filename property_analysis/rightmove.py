@@ -150,12 +150,12 @@ class Rightmove(object):
                 nearest = (self.outcodeLatlongDict[outcode][lat2, lng2], distance)
         return nearest
 
-    def add_journey_times(self, csvPath):
+    def add_journey_times(self, csvPath, destName=''):
         series = pd.read_csv(csvPath, index_col='postcode')['journeyTime']
         for resultDict in self.results.values():
             for prop in resultDict['properties']:
                 try:
-                    prop['journeyTime'] = series[prop['postcodeEstimate']]
+                    prop['journeyTime'+destName.capitalize()] = series[prop['postcodeEstimate']]
                 except:
                     print('Warning: no journey time for', prop['postcodeEstimate'])
 
