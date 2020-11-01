@@ -205,9 +205,9 @@ if __name__ == "__main__":
             }
 
     rightmove.search_properties(propType='rent', params=params, limit=50)
-    rightmove.to_json('results.json')
+    rightmove.to_json('rm_results.json')
 
-    rightmove.load_json('results.json')
+    rightmove.load_json('rm_results.json')
     rightmove.estimate_postcodes(p.latlongDict)
 
     rightmove.add_journey_times('journey_times.csv')
