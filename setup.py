@@ -14,5 +14,6 @@ setup(
     url='https://github.com/alexanderkirkup/property-analysis',
     author='Alexander Kirkup',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=['pandas', 'aiohttp']
 )
