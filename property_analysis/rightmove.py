@@ -151,7 +151,7 @@ class Rightmove(object):
         return nearest
 
     def add_journey_times(self, csvPath, destName=''):
-        series = pd.read_csv(csvPath, index_col='postcode')['journeyTime']
+        series = pd.read_csv(csvPath, index_col='postcode', low_memory=False)['journeyTime']
         for resultDict in self.results.values():
             for prop in resultDict['properties']:
                 try:
