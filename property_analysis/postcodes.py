@@ -73,7 +73,7 @@ class Postcodes(object):
         lookupDf = pd.read_csv(csvPath, index_col='WD19CD')
         lookupDf.drop(columns=['FID', 'LAD19CD'], inplace=True)
         lookupDf.rename(columns={'WD19NM': 'ward', 'LAD19NM': 'localAuthority'}, inplace=True)
-        self.df.join(lookupDf, on='osward')
+        self.df = self.df.join(lookupDf, on='osward')
         return print('Postcodes: Added Ward & Local Authority District names to df.')
 
     def df_add_oac(self, csvPath):
@@ -81,7 +81,7 @@ class Postcodes(object):
         oacDf.index = [text.split(':')[0] for text in oacDf['Subgroup']]
         oacDf.drop(columns=['ObjectId'], inplace=True)
         oacDf.rename(columns={'Supergroup': 'oacSupergroup', 'Group_': 'oacGroup', 'Subgroup': 'oacSubgroup'}, inplace=True)
-        self.df.join(oacDf, on='oac11')
+        self.df = self.df.join(oacDf, on='oac11')
         return print('Postcodes: Added Output Area Classifications to df.')
 
     def df_add_nearest_station(self, csvPath):
