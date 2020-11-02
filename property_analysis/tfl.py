@@ -129,14 +129,14 @@ def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year,
     collectedPostcodes = {row.split(',')[colIdx] for row in rows}
 
     newPostcodeDict = {postcode: latlong for postcode, latlong in postcodeDict.items() if postcode not in collectedPostcodes}
-    print('New postcodes:', len(newPostcodeDict))
+    print('Journey Planner: New postcodes:', len(newPostcodeDict))
 
     jp = JourneyPlanner(app_id=tflKeysDict['app_id'], app_key=tflKeysDict['app_key'], rateLimit=0.14)
     jp.load_postcodes(newPostcodeDict)
     jp.request_journeys(endLocation=destination, year=year, month=month, day=day, hour=hour, limit=None)
     
     if not jp.results:
-        return print('No new (working) postcodes since last update.')
+        return print('Journey Planner: No new (working) postcodes since last update.')
 
     oldDf = pd.read_csv(csvPath, index_col='postcode')
     # try:
@@ -146,7 +146,7 @@ def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year,
     combinedDf = oldDf.append(newDf)
     # print(combinedDf)
     combinedDf.to_csv(csvPath)
-    return print('Postcodes added:', len(newDf))
+    return print('Journey Planner: Postcodes added:', len(newDf))
 
 if __name__ == "__main__":
     import json
