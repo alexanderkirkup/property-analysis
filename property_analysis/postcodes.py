@@ -1,3 +1,5 @@
+from math import sqrt
+import time
 import pandas as pd
 
 class Postcodes(object):
@@ -66,7 +68,49 @@ class Postcodes(object):
             self.outcodes.sort()
 
         return self.outcodes
-        
+
+    def df_add_ward_lad(self, csvPath):
+        lookupDf = pd.read_csv(csvPath, index_col='WD19CD')
+        lookupDf.drop(columns=['FID', 'LAD19CD'], inplace=True)
+        lookupDf.rename(columns={'WD19NM': 'ward', 'LAD19NM': 'localAuthority'}, inplace=True)
+        self.df.join(lookupDf, on='osward')
+        return print('Postcodes: Added Ward & Local Authority District names to df.')
+
+    def df_add_oac(self, csvPath):
+        oacDf = pd.read_csv(csvPath)
+        oacDf.index = [text.split(':')[0] for text in oacDf['Subgroup']]
+        oacDf.drop(columns=['ObjectId'], inplace=True)
+        oacDf.rename(columns={'Supergroup': 'oacSupergroup', 'Group_': 'oacGroup', 'Subgroup': 'oacSubgroup'}, inplace=True)
+        self.df.join(oacDf, on='oac11')
+        return print('Postcodes: Added Output Area Classifications to df.')
+
+    def df_add_nearest_station(self, csvPath):
+
+        def nearest_station(lat, lng):
+            nearest = (None, None, float('inf'))
+            for lat2,lng2 in latlongDict.keys():
+                distance = sqrt((lat-lat2)**2 + (lng-lng2)**2)
+                if distance < nearest[2]:
+                    nearest = (*latlongDict[lat2, lng2], distance)
+            return nearest
+
+        print('Postcodes: Calculating nearest stations (may take a while)...')
+        start = time.monotonic()
+        stationsDf = pd.read_csv(csvPath)
+        latlongDict = {(row.Latitude, row.Longitude): (row.Station, row.Zone) for row in stationsDf.itertuples()}
+        self.df[['nearestStation', 'stationZone', 'stationDistance']] = [nearest_station(lat, lng) for lat, lng in zip(self.df['lat'], self.df['long'])]
+        return print('Postcodes: Added nearest stations to df ({:.2f} secs).'.format(time.monotonic()-start))
+
+    def get_df(self, drop_rename=True, dropExtended=False):
+        df = self.df.copy()
+        if drop_rename:
+            df.drop(columns=['pcd', 'pcd2', 'doterm', 'oscty', 'ced', 'oslaua', 'osward', 'parish', 'usertype', 'oseast1m', 'osnrth1m', 'osgrdind', 'oshlthau', 'nhser', 'ctry', 'rgn', 'streg', 'eer', 'teclec', 'ttwa', 'pct', 'nuts', 'statsward', 'oa01', 'casward', 'park', 'lsoa01', 'msoa01', 'ur01ind', 'oac01', 'wz11', 'ccg', 'ru11ind', 'lep1', 'lep2', 'pfa', 'calncv', 'stp'], inplace=True)
+            if dropExtended:
+                df.drop(columns=['dointr', 'pcon', 'oa11', 'lsoa11', 'msoa11', 'bua11', 'buasd11', 'oac11'], inplace=True)
+            df.rename(columns={'pcds': 'postcode', 'imd': 'deprivationRank', 'lat': 'latitude', 'long': 'longitude'}, inplace=True)
+            df.set_index('postcode', inplace=True)
+        return df
+
 if __name__ == "__main__":
 
     p = Postcodes()
