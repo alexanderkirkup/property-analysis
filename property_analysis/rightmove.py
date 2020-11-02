@@ -51,7 +51,10 @@ class Rightmove(object):
             await self.requests.close()
 
         if not self.locations:
-            return print('Error: need to load Rightmove locations before fetch')
+            raise Exception('Must load Rightmove locations before property search')
+
+        if 'propertyTypes' in params:  # don't drop property types that have been requested in params
+            dropResults = [propType for propType in dropResults if propType not in params['propertyTypes'].split(',')]
 
         if propType == 'rent':
             url = self.url+'rent/find'
@@ -60,7 +63,7 @@ class Rightmove(object):
             url = self.url+'sale/find'
             print('Rightmove: searching properties for sale...')
         else:
-            return print('Error: incorrect propType')
+            raise Exception('search_properties "proptype" not allowed')
 
         params.update({'apiApplication': self.apiApplication, 'numberOfPropertiesRequested': '50'})
 
@@ -171,18 +174,24 @@ class Rightmove(object):
     def load_json(self, path):
         with open(path, 'r') as JSON:
             self.results = json.load(JSON)
+
+    def get_df(self, clean=True):
+        df = pd.DataFrame(self.resultsList)
+        if clean:
+            df = self.clean_df(df)
+        return df
+
+    @staticmethod
+    def clean_df(df):
+        df.rename(columns={'autoEmailReasonType': 'listingStatus'}, inplace=True)
+        df.dropna(subset=['price'], inplace=True)
+        df.drop(df[df.commercial].index, inplace=True)
+        df.drop(columns=['commercial', 'dateShortlisted', 'hidden', 'letFurnishType', 'overseas', 'premiumDisplayStyle', 'saved', 'shouldShowPrice', 'showLettingFeesMessage', 'showMap', 'showStreetView', 'status', 'transactionTypeId', 'visible'], inplace=True)
+        return df
  
     @property
     def resultsList(self):
         return [prop for resultDict in self.results.values() for prop in resultDict['properties']]
-
-    @property
-    def resultsDf(self):
-        # try:
-        #     return self._resultsDf
-        # except:
-        self._resultsDf = pd.DataFrame(self.resultsList)
-        return self._resultsDf
 
 if __name__ == "__main__":
     from postcodes import Postcodes
@@ -212,4 +221,4 @@ if __name__ == "__main__":
 
     rightmove.add_journey_times('journey_times.csv')
 
-    print(rightmove.resultsDf)
+    print(rightmove.get_df())

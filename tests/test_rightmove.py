@@ -41,6 +41,7 @@ rm.to_json('rm_results.json')
 
 rm.load_json('rm_results.json')
 
+rmDf = rm.get_df(clean=True)
 # filter any properties with latlong outside general London area
-londonDf = rm.resultsDf[(rm.resultsDf.latitude > 51) & (rm.resultsDf.latitude < 52) & (rm.resultsDf.longitude > -0.75) & (rm.resultsDf.longitude < 0.75)]
+londonDf = rmDf[(rmDf.latitude > 51) & (rmDf.latitude < 52) & (rmDf.longitude > -0.75) & (rmDf.longitude < 0.75)]
 print(londonDf)
