@@ -17,7 +17,7 @@ class JourneyPlanner(object):
     def load_postcodes(self, postcodeDict):
         self.postcodeDict = postcodeDict
 
-    def request_journeys(self, endLocation, year, month, day, hour, limit=None):
+    def request_journeys(self, endLocation, year, month, day, hour, modes=[], limit=None):
         departDatetime = datetime(year=year, month=month, day=day, hour=hour, minute=00)
         if datetime.now() > departDatetime:
             raise Exception('Requested "departDatetime" is in the past')
@@ -32,6 +32,10 @@ class JourneyPlanner(object):
             'alternativeCycle': 'false',
             'alternativeWalking': 'true',
         }
+
+        if modes:
+          params['mode'] = ','.join(modes)
+          
         params.update({'app_id': self.app_id, 'app_key': self.app_key})
 
         self.results = {}
