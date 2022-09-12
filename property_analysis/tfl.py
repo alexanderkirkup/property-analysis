@@ -125,7 +125,7 @@ class JourneyPlanner(object):
         } 
         for postcode, result in self.results.items() for journey in result['journeys']]
 
-def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year, month, day, hour):
+def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year, month, day, hour, modes=[]):
     with open(csvPath, 'r') as f:
         rows = f.readlines()
     headers = rows.pop(0).rstrip().split(',')
@@ -137,7 +137,7 @@ def journey_times_updater(csvPath, postcodeDict, tflKeysDict, destination, year,
 
     jp = JourneyPlanner(app_id=tflKeysDict['app_id'], app_key=tflKeysDict['app_key'], rateLimit=0.14)
     jp.load_postcodes(newPostcodeDict)
-    jp.request_journeys(endLocation=destination, year=year, month=month, day=day, hour=hour, limit=None)
+    jp.request_journeys(endLocation=destination, year=year, month=month, day=day, hour=hour, modes=modes, limit=None)
     
     if not jp.results:
         return print('Journey Planner: No new (working) postcodes since last update.')
